@@ -52,7 +52,8 @@ RUN apk add --no-cache nodejs npm
 RUN mkdir -p /app/backend
 
 # 从构建阶段复制文件
-COPY --from=frontend-builder /app/web/dist /usr/share/nginx/html
+# 注意: vue.config.js中outputDir为'../dist'，所以构建输出在/app/dist
+COPY --from=frontend-builder /app/dist /usr/share/nginx/html
 COPY --from=backend-builder /app /app/backend
 
 # 复制nginx配置

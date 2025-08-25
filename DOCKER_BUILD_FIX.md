@@ -10,7 +10,8 @@
 2. **vue-cli-service错误修复**: 前端构建阶段包含开发依赖，确保构建工具可用
 3. **模块路径解析修复**: 在vue.config.js中添加simple-mind-map别名，解决模块找不到的问题
 4. **copy.js文件缺失修复**: 在Dockerfile中添加copy.js文件复制，确保构建后处理脚本可用
-5. **依赖安装优化**: 后端构建阶段仅安装生产依赖，减少镜像体积
+5. **Vue构建输出路径修复**: 根据vue.config.js中outputDir配置，修正Dockerfile中的文件复制路径
+6. **依赖安装优化**: 后端构建阶段仅安装生产依赖，减少镜像体积
 
 ### 智能安装策略详解
 
@@ -167,7 +168,8 @@ RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
 2. **vue-cli-service 错误**: 前端构建阶段保留开发依赖
 3. **模块路径解析错误**: 在vue.config.js中添加simple-mind-map别名配置
 4. **copy.js文件缺失**: 在Dockerfile中显式复制copy.js文件到构建环境
-5. **镜像体积优化**: 后端仅安装生产依赖，最终镜像不包含不必要的开发工具
+5. **Vue构建输出路径错误**: 根据vue.config.js配置修正文件复制路径从/app/web/dist到/app/dist
+6. **镜像体积优化**: 后端仅安装生产依赖，最终镜像不包含不必要的开发工具
 
 ### Vue.config.js 配置修复
 
@@ -182,6 +184,16 @@ resolve: {
 ```
 
 这解决了webpack在构建过程中无法找到simple-mind-map模块的问题。
+
+### 构建路径配置说明
+
+vue.config.js中的重要配置：
+```javascript
+outputDir: '../dist'  // 构建输出到上级目录的dist文件夹
+```
+
+这意味着Vue构建后的文件位于 `/app/dist` 而不是 `/app/web/dist`。
+Dockerfile必须相应地从正确的路径复制文件。
 
 ### 兼容性说明
 - 使用 `--omit=dev` 替代已弃用的 `--only=production`
