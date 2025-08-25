@@ -33,7 +33,18 @@ test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
 ./test-docker-build.sh
 ```
 
-### 方法2: 手动验证步骤
+### 方法2: 缓存问题解决
+如枟遇到缓存相关错误：
+```bash
+# 清理缓存后构建
+./clean-docker-cache.sh
+docker build -t mindmap-qoder:test .
+
+# 或者直接无缓存构建
+./build-no-cache.sh
+```
+
+### 方法3: 手动验证步骤
 
 #### 1. 构建测试
 ```bash
@@ -81,8 +92,32 @@ docker stop mindmap-test && docker rm mindmap-test
 - `vue-cli-service: not found`: 已通过在前端构建中包含开发依赖解决
 - `simple-mind-map module not found`: 已通过添加webpack别名解析解决
 - `Cannot find module '/app/copy.js'`: 已通过在Dockerfile中添加copy.js文件复制解决
+- `failed to compute cache key` / `dist not found`: Docker缓存问题，使用缓存清理脚本解决
 - 网络连接问题: 检查网络连接及防火墙设置
 - 磁盘空间不足: 清理旧镜像和容器
+
+### Docker缓存问题解决方案
+
+如果遇到 `failed to compute cache key` 或 `"/app/web/dist": not found` 错误:
+
+**方法1: 清理Docker缓存**
+```bash
+./clean-docker-cache.sh
+```
+
+**方法2: 无缓存构建**
+```bash
+./build-no-cache.sh
+# 或者手动执行
+docker build --no-cache -t mindmap-qoder:test .
+```
+
+**方法3: 手动清理命令**
+```bash
+docker builder prune -f
+docker image prune -f
+docker container prune -f
+```
 
 ## 文件状态说明
 
