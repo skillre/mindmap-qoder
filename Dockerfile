@@ -10,9 +10,14 @@ WORKDIR /app
 COPY web/package*.json ./web/
 COPY simple-mind-map/package*.json ./simple-mind-map/
 
-# 安装依赖
-RUN cd web && npm ci --only=production
-RUN cd simple-mind-map && npm ci --only=production
+# 智能依赖安装 - 根据package-lock.json存在情况选择安装命令
+WORKDIR /app/web
+RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
+
+WORKDIR /app/simple-mind-map
+RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
+
+WORKDIR /app
 
 # 复制源代码
 COPY web/ ./web/
@@ -30,8 +35,8 @@ WORKDIR /app
 # 复制后端package文件
 COPY server/package*.json ./
 
-# 安装依赖
-RUN npm ci --only=production
+# 智能依赖安装 - 根据package-lock.json存在情况选择安装命令
+RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
 
 # 复制后端源代码
 COPY server/ ./
