@@ -2,13 +2,14 @@
 
 ## 修复说明
 
-✅ **问题已修复**: 已解决Docker构建过程中的多个依赖安装问题。
+✅ **问题已修复**: 已解决Docker构建过程中的多个依赖安装和模块解析问题。
 
 ### 修复内容
 
 1. **npm ci错误修复**: 实现智能依赖安装策略，根据package-lock.json文件存在情况自动选择合适的安装命令
 2. **vue-cli-service错误修复**: 前端构建阶段包含开发依赖，确保构建工具可用
-3. **依赖安装优化**: 后端构建阶段仅安装生产依赖，减少镜像体积
+3. **模块路径解析修复**: 在vue.config.js中添加simple-mind-map别名，解决模块找不到的问题
+4. **依赖安装优化**: 后端构建阶段仅安装生产依赖，减少镜像体积
 
 ### 智能安装策略详解
 
@@ -65,7 +66,8 @@ docker stop mindmap-test && docker rm mindmap-test
 
 ✅ **成功标志**:
 - 前端依赖安装成功（包含开发依赖）
-- vue-cli-service 命令可用，前端构建成功  
+- vue-cli-service 命令可用，前端构建成功
+- simple-mind-map 模块路径正确解析，没有模块找不到的错误
 - 后端依赖安装成功（仅生产依赖）
 - 最终镜像构建成功
 - 容器能正常启动
@@ -75,6 +77,7 @@ docker stop mindmap-test && docker rm mindmap-test
 ❌ **常见错误及解决**:
 - `npm ci` 错误: 已通过智能安装策略解决
 - `vue-cli-service: not found`: 已通过在前端构建中包含开发依赖解决
+- `simple-mind-map module not found`: 已通过添加webpack别名解析解决
 - 网络连接问题: 检查网络连接及防火墙设置
 - 磁盘空间不足: 清理旧镜像和容器
 
@@ -124,7 +127,22 @@ RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
 
 1. **npm ci 错误**: 通过条件判断自动选择npm ci或npm install
 2. **vue-cli-service 错误**: 前端构建阶段保留开发依赖
-3. **镜像体积优化**: 后端仅安装生产依赖，最终镜像不包含不必要的开发工具
+3. **模块路径解析错误**: 在vue.config.js中添加simple-mind-map别名配置
+4. **镜像体积优化**: 后端仅安装生产依赖，最终镜像不包含不必要的开发工具
+
+### Vue.config.js 配置修复
+
+添加了模块别名解析：
+```javascript
+resolve: {
+  alias: {
+    '@': path.resolve(__dirname, './src/'),
+    'simple-mind-map': path.resolve(__dirname, '../simple-mind-map')
+  }
+}
+```
+
+这解决了webpack在构建过程中无法找到simple-mind-map模块的问题。
 
 ### 兼容性说明
 - 使用 `--omit=dev` 替代已弃用的 `--only=production`
