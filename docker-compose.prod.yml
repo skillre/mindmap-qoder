@@ -9,7 +9,7 @@ services:
     container_name: mindmap-qoder-prod
     restart: always
     ports:
-      - "80:80"
+      - "8080:80"     # 前端服务 (nginx) - 生产环境
     environment:
       - NODE_ENV=production
       - PORT=3000

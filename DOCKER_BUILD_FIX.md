@@ -59,7 +59,7 @@ docker build --target backend-builder -t test-backend .
 
 #### 2. 启动测试
 ```bash
-# 启动容器
+# 启动容器 - 使用新的端口配置
 docker run -d -p 8080:80 -p 3001:3000 --name mindmap-test mindmap-qoder:test
 
 # 测试访问
@@ -86,7 +86,7 @@ docker stop mindmap-test && docker rm mindmap-test
 - 最终镜像构建成功
 - 容器能正常启动
 - 前端页面可访问 (http://localhost:8080)
-- 后端服务正常运行
+- 后端服务正常运行 (http://localhost:3001)
 
 ❌ **常见错误及解决**:
 - `npm ci` 错误: 已通过智能安装策略解决
