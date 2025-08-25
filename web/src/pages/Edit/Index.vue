@@ -6,6 +6,7 @@
     <template v-if="show">
       <Toolbar v-if="!isZenMode"></Toolbar>
       <Edit></Edit>
+      <AutoSaveIndicator></AutoSaveIndicator>
     </template>
   </div>
 </template>
@@ -13,13 +14,15 @@
 <script>
 import Toolbar from './components/Toolbar.vue'
 import Edit from './components/Edit.vue'
+import AutoSaveIndicator from '@/components/AutoSaveIndicator.vue'
 import { mapState, mapMutations } from 'vuex'
 import { getLocalConfig } from '@/api'
 
 export default {
   components: {
     Toolbar,
-    Edit
+    Edit,
+    AutoSaveIndicator
   },
   data() {
     return {

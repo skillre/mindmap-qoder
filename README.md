@@ -1,4 +1,4 @@
-<h1 align="center">Simple mind map</h1>
+<h1 align="center">Simple mind map - GitHub集成版</h1>
 
 [![npm-version](https://img.shields.io/npm/v/simple-mind-map)](https://www.npmjs.com/package/simple-mind-map)
 ![npm download](https://img.shields.io/npm/dm/simple-mind-map)
@@ -7,7 +7,67 @@
 [![GitHub stars](https://img.shields.io/github/stars/wanglin2/mind-map)](https://github.com/wanglin2/mind-map/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/wanglin2/mind-map)](https://github.com/wanglin2/mind-map/network/members)
 
+> 🎆 **特别版本：GitHub云端存储集成版** - 支持GitHub私有仓库存储、自动保存、版本控制等云端功能！
+
 > 中文名：思绪思维导图。一个简单&强大的 Web 思维导图库和思维导图软件。
+
+## 🎆 GitHub集成版特性
+
+这个特别版本基于原版simple-mind-map项目，增加了完整的GitHub云端存储功能：
+
+- **💾 GitHub私有仓库存储** - 数据安全存储在您的GitHub私有仓库中
+- **⚙️ 自动保存** - 支持实时/定时自动保存，无需担心数据丢失
+- **📁 云端文件管理** - 在线新建、编辑、删除、下载思维导图文件
+- **🔄 版本控制** - 基于Git的版本历史，每次修改都有记录
+- **🚀 Docker部署** - 一键容器化部署，支持开发/生产环境
+- **🔒 安全可靠** - 前后端分离、API限流、HTTPS支持
+
+### 与原版的区别
+
+| 功能 | 原版 | GitHub集成版 |
+|------|------|-------------|
+| 本地文件操作 | ✅ | ❌ 已移除 |
+| 云端存储 | ❌ | ✅ GitHub私有仓库 |
+| 自动保存 | ❌ | ✅ 实时/定时 |
+| 版本控制 | ❌ | ✅ Git版本管理 |
+| 文件管理 | ✅ 本地 | ✅ 云端 |
+| 部署方式 | 静态部署 | Docker容器化 |
+
+## 🚀 快速开始
+
+### 一键部署（推荐）
+
+```bash
+# 克隆项目
+git clone <repository-url>
+cd mindmap-qoder
+
+# 生产环境部署
+docker-compose -f docker-compose.prod.yml up -d
+
+# 开发环境部署
+docker-compose -f docker-compose.dev.yml up
+```
+
+访问 `http://localhost` 开始使用！
+
+### GitHub配置指南
+
+1. **创建GitHub Token**
+   - 访问 [GitHub Settings > Tokens](https://github.com/settings/tokens)
+   - 生成新token，授予 `repo` 权限
+
+2. **应用配置**
+   - 打开应用，点击工具栏“配置”按钮
+   - 输入GitHub Token和选择私有仓库
+   - 启用自动保存功能
+
+3. **开始使用**
+   - 创建思维导图自动保存到GitHub
+   - 通过“云端文件”管理您的作品
+
+📚 **详细部署指南**: [DEPLOYMENT.md](./DEPLOYMENT.md)  
+🧪 **功能测试指南**: [TESTING.md](./TESTING.md)
 
 本项目主要包含以下内容：
 

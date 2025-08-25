@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # 开发环境主应用
+  mindmap-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mindmap-qoder-dev
+    ports:
+      - "80:80"      # nginx
+      - "3000:3000"  # 后端API
+      - "8080:8080"  # 前端开发服务器
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    volumes:
+      # 源代码热重载
+      - ./web:/app/web
+      - ./server:/app/server
+      - ./simple-mind-map:/app/simple-mind-map
+      # node_modules缓存
+      - node_modules_web:/app/web/node_modules
+      - node_modules_server:/app/server/node_modules
+      - node_modules_simple:/app/simple-mind-map/node_modules
+      # 开发工具配置
+      - ./.eslintrc.js:/app/.eslintrc.js:ro
+      - ./.gitignore:/app/.gitignore:ro
+    networks:
+      - mindmap-dev-network
+    stdin_open: true
+    tty: true
+
+  # 开发数据库（可选）
+  redis-dev:
+    image: redis:7-alpine
+    container_name: mindmap-redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - mindmap-dev-network
+    volumes:
+      - redis-dev-data:/data
+
+  # 开发工具：代码热重载监控
+  file-watcher:
+    image: node:16-alpine
+    container_name: mindmap-file-watcher
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - node_modules_web:/app/web/node_modules
+      - node_modules_server:/app/server/node_modules
+    command: |
+      sh -c "
+        echo 'File watcher started'
+        tail -f /dev/null
+      "
+    networks:
+      - mindmap-dev-network
+
+networks:
+  mindmap-dev-network:
+    driver: bridge
+
+volumes:
+  node_modules_web:
+  node_modules_server:
+  node_modules_simple:
+  redis-dev-data:

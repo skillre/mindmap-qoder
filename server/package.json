@@ -1,0 +1,24 @@
+{
+  "name": "mindmap-qoder-server",
+  "version": "1.0.0",
+  "description": "Backend server for mindmap-qoder with GitHub integration",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.4.0",
+    "compression": "^1.7.4",
+    "helmet": "^6.1.5",
+    "express-rate-limit": "^6.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "keywords": ["mindmap", "github", "api"],
+  "author": "mindmap-qoder",
+  "license": "MIT"
+}

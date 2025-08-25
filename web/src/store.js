@@ -37,7 +37,23 @@ const store = new Vuex.Store({
     // 扩展主题列表
     extendThemeGroupList: [],
     // 内置背景图片
-    bgList: []
+    bgList: [],
+    // GitHub 配置
+    githubConfig: null,
+    // 当前打开的文件信息
+    currentFile: {
+      path: null,
+      sha: null,
+      name: null
+    },
+    // 自动保存状态
+    autoSaveStatus: {
+      enabled: false,
+      interval: 30,
+      timer: null,
+      lastSaveTime: null,
+      saving: false
+    }
   },
   mutations: {
     // 设置操作本地文件标志位
@@ -99,9 +115,90 @@ const store = new Vuex.Store({
     // 设置背景图片列表
     setBgList(state, data) {
       state.bgList = data
+    },
+
+    // 设置GitHub配置
+    setGitHubConfig(state, config) {
+      state.githubConfig = config
+      // 保存到localStorage
+      try {
+        localStorage.setItem('GITHUB_CONFIG', JSON.stringify(config))
+      } catch (error) {
+        console.error('保存GitHub配置失败:', error)
+      }
+    },
+
+    // 设置当前文件信息
+    setCurrentFile(state, fileInfo) {
+      state.currentFile = { ...fileInfo }
+    },
+
+    // 清除当前文件信息
+    clearCurrentFile(state) {
+      state.currentFile = {
+        path: null,
+        sha: null,
+        name: null
+      }
+    },
+
+    // 设置自动保存状态
+    setAutoSaveStatus(state, status) {
+      state.autoSaveStatus = { ...state.autoSaveStatus, ...status }
+    },
+
+    // 启动自动保存
+    startAutoSave(state, { interval, callback }) {
+      // 清除现有定时器
+      if (state.autoSaveStatus.timer) {
+        clearInterval(state.autoSaveStatus.timer)
+      }
+      
+      state.autoSaveStatus.enabled = true
+      state.autoSaveStatus.interval = interval
+      
+      // 设置新的定时器
+      state.autoSaveStatus.timer = setInterval(() => {
+        if (callback && typeof callback === 'function') {
+          callback()
+        }
+      }, interval * 1000)
+    },
+
+    // 停止自动保存
+    stopAutoSave(state) {
+      if (state.autoSaveStatus.timer) {
+        clearInterval(state.autoSaveStatus.timer)
+        state.autoSaveStatus.timer = null
+      }
+      state.autoSaveStatus.enabled = false
+    },
+
+    // 更新最后保存时间
+    updateLastSaveTime(state) {
+      state.autoSaveStatus.lastSaveTime = new Date().toISOString()
     }
   },
-  actions: {}
+  actions: {
+    // 初始化GitHub配置
+    initGitHubConfig({ commit }) {
+      try {
+        const config = localStorage.getItem('GITHUB_CONFIG')
+        if (config) {
+          const parsedConfig = JSON.parse(config)
+          commit('setGitHubConfig', parsedConfig)
+        }
+      } catch (error) {
+        console.error('初始化GitHub配置失败:', error)
+      }
+    },
+
+    // 清除GitHub配置
+    clearGitHubConfig({ commit }) {
+      commit('setGitHubConfig', null)
+      localStorage.removeItem('GITHUB_CONFIG')
+    }
+  }
 })
 
 export default store

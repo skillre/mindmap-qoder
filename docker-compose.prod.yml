@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # 主应用服务 - 生产环境
+  mindmap-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: mindmap-qoder-prod
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      # 日志持久化
+      - ./logs:/var/log/nginx
+      # 配置文件挂载（可选）
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - mindmap-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: mindmap-redis-prod
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-mindmap123}
+    volumes:
+      - redis-data:/data
+    networks:
+      - mindmap-network
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-mindmap123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "auth", "${REDIS_PASSWORD:-mindmap123}", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # 可选：监控服务
+  watchtower:
+    image: containrrr/watchtower
+    container_name: mindmap-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=3600
+    networks:
+      - mindmap-network
+
+networks:
+  mindmap-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+    driver: local

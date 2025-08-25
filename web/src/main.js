@@ -20,6 +20,9 @@ Vue.use(VueViewer)
 
 const initApp = () => {
   i18n.locale = getLang()
+  // 初始化GitHub配置
+  store.dispatch('initGitHubConfig')
+  
   new Vue({
     render: h => h(App),
     router,

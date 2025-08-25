@@ -54,11 +54,17 @@ export const storeData = data => {
       window.takeOverAppMethods.saveMindMapData(originData)
       return
     }
-    Vue.prototype.$bus.$emit('write_local_file', originData)
-    if (vuexStore.state.isHandleLocalFile) {
-      return
+    
+    // 判断是否使用GitHub保存
+    const githubConfig = vuexStore.state.githubConfig
+    if (githubConfig && githubConfig.enableAutoSave && githubConfig.token) {
+      // 发送GitHub自动保存事件
+      Vue.prototype.$bus.$emit('github_auto_save', originData)
+    } else {
+      // 传统本地存储
+      Vue.prototype.$bus.$emit('write_local_file', originData)
+      localStorage.setItem(SIMPLE_MIND_MAP_DATA, JSON.stringify(originData))
     }
-    localStorage.setItem(SIMPLE_MIND_MAP_DATA, JSON.stringify(originData))
   } catch (error) {
     console.log(error)
     if ('exceeded') {
