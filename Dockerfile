@@ -22,6 +22,7 @@ WORKDIR /app
 # 复制源代码
 COPY web/ ./web/
 COPY simple-mind-map/ ./simple-mind-map/
+COPY copy.js ./copy.js
 
 # 构建前端应用
 RUN cd web && npm run build
