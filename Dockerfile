@@ -10,12 +10,12 @@ WORKDIR /app
 COPY web/package*.json ./web/
 COPY simple-mind-map/package*.json ./simple-mind-map/
 
-# 智能依赖安装 - 根据package-lock.json存在情况选择安装命令
+# 智能依赖安装 - 构建阶段需要包含开发依赖
 WORKDIR /app/web
-RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
+RUN test -f package-lock.json && npm ci || npm install
 
 WORKDIR /app/simple-mind-map
-RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
+RUN test -f package-lock.json && npm ci || npm install
 
 WORKDIR /app
 
@@ -35,7 +35,7 @@ WORKDIR /app
 # 复制后端package文件
 COPY server/package*.json ./
 
-# 智能依赖安装 - 根据package-lock.json存在情况选择安装命令
+# 智能依赖安装 - 后端只需要生产依赖
 RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
 
 # 复制后端源代码

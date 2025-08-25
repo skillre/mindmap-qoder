@@ -2,22 +2,26 @@
 
 ## 修复说明
 
-✅ **问题已修复**: 已将Dockerfile中的固定 `npm ci` 命令替换为智能依赖安装策略。
+✅ **问题已修复**: 已解决Docker构建过程中的多个依赖安装问题。
 
 ### 修复内容
 
-1. **前端构建阶段**: 为web和simple-mind-map模块实现智能依赖安装
-2. **后端构建阶段**: 为server模块实现智能依赖安装
-3. **依赖安装逻辑**: 根据package-lock.json文件存在情况自动选择合适的安装命令
+1. **npm ci错误修复**: 实现智能依赖安装策略，根据package-lock.json文件存在情况自动选择合适的安装命令
+2. **vue-cli-service错误修复**: 前端构建阶段包含开发依赖，确保构建工具可用
+3. **依赖安装优化**: 后端构建阶段仅安装生产依赖，减少镜像体积
 
-### 智能安装策略
+### 智能安装策略详解
 
+#### 前端构建阶段 (需要开发依赖)
 ```bash
-# 如果存在 package-lock.json 文件，使用 npm ci (更快、更可靠)
-test -f package-lock.json && npm ci --omit=dev
+# web和simple-mind-map模块需要构建工具
+test -f package-lock.json && npm ci || npm install
+```
 
-# 如果不存在 package-lock.json 文件，使用 npm install (兼容性更好)
-npm install --omit=dev
+#### 后端构建阶段 (仅生产依赖)
+```bash
+# server模块运行时不需要开发依赖
+test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
 ```
 
 ## 快速验证
@@ -57,19 +61,22 @@ docker stop mindmap-test && docker rm mindmap-test
 
 ## 预期结果
 
+## 预期结果
+
 ✅ **成功标志**:
-- 前端构建阶段完成无错误
-- 后端构建阶段完成无错误  
+- 前端依赖安装成功（包含开发依赖）
+- vue-cli-service 命令可用，前端构建成功  
+- 后端依赖安装成功（仅生产依赖）
 - 最终镜像构建成功
 - 容器能正常启动
 - 前端页面可访问 (http://localhost:8080)
 - 后端服务正常运行
 
-❌ **如果仍有问题**:
-1. 检查Docker版本是否支持
-2. 确认网络连接正常（需要下载npm包）
-3. 检查磁盘空间是否充足
-4. 查看详细错误日志
+❌ **常见错误及解决**:
+- `npm ci` 错误: 已通过智能安装策略解决
+- `vue-cli-service: not found`: 已通过在前端构建中包含开发依赖解决
+- 网络连接问题: 检查网络连接及防火墙设置
+- 磁盘空间不足: 清理旧镜像和容器
 
 ## 文件状态说明
 
@@ -99,13 +106,25 @@ docker stop mindmap-test && docker rm mindmap-test
 
 **修复前**:
 ```dockerfile
-RUN npm ci --only=production  # 固定使用npm ci，缺少锁文件时失败
+# 固定使用npm ci，缺少锁文件时失败
+RUN npm ci --only=production
+# 且所有模块都排除开发依赖，导致构建工具不可用
 ```
 
 **修复后**:
 ```dockerfile
+# 前端构建阶段 - 包含开发依赖
+RUN test -f package-lock.json && npm ci || npm install
+
+# 后端构建阶段 - 仅生产依赖
 RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
 ```
+
+### 问题解决方案
+
+1. **npm ci 错误**: 通过条件判断自动选择npm ci或npm install
+2. **vue-cli-service 错误**: 前端构建阶段保留开发依赖
+3. **镜像体积优化**: 后端仅安装生产依赖，最终镜像不包含不必要的开发工具
 
 ### 兼容性说明
 - 使用 `--omit=dev` 替代已弃用的 `--only=production`
