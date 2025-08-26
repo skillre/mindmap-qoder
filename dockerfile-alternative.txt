@@ -1,0 +1,13 @@
+# 备用方案: 修改Dockerfile以保持dist目录结构
+# 如果需要使用这个方案，将下面的内容替换Dockerfile中的对应行
+
+# 在生产阶段的文件复制部分：
+# 原来的：
+# COPY --from=frontend-builder /app/dist /usr/share/nginx/html
+
+# 改为：
+# RUN mkdir -p /usr/share/nginx/html/dist
+# COPY --from=frontend-builder /app/dist /usr/share/nginx/html/dist
+# COPY --from=frontend-builder /app/index.html /usr/share/nginx/html/
+
+# 这样可以保持原有的目录结构，但推荐使用方案1（修改vue.config.js）

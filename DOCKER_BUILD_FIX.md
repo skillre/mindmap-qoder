@@ -11,7 +11,8 @@
 3. **模块路径解析修复**: 在vue.config.js中添加simple-mind-map别名，解决模块找不到的问题
 4. **copy.js文件缺失修复**: 在Dockerfile中添加copy.js文件复制，确保构建后处理脚本可用
 5. **Vue构建输出路径修复**: 根据vue.config.js中outputDir配置，修正Dockerfile中的文件复制路径
-6. **依赖安装优化**: 后端构建阶段仅安装生产依赖，减少镜像体积
+6. **页面空白问题修复**: 修正vue.config.js中publicPath配置，解决资源文件路径问题
+7. **依赖安装优化**: 后端构建阶段仅安装生产依赖，减少镜像体积
 
 ### 智能安装策略详解
 
@@ -93,6 +94,7 @@ docker stop mindmap-test && docker rm mindmap-test
 - `vue-cli-service: not found`: 已通过在前端构建中包含开发依赖解决
 - `simple-mind-map module not found`: 已通过添加webpack别名解析解决
 - `Cannot find module '/app/copy.js'`: 已通过在Dockerfile中添加copy.js文件复制解决
+- **页面空白问题**: 已通过修正vue.config.js中publicPath配置解决，使用修复脚本: `./fix-blank-page.sh`
 - `failed to compute cache key` / `dist not found`: Docker缓存问题，使用缓存清理脚本解决
 - 网络连接问题: 检查网络连接及防火墙设置
 - 磁盘空间不足: 清理旧镜像和容器
@@ -169,7 +171,8 @@ RUN test -f package-lock.json && npm ci --omit=dev || npm install --omit=dev
 3. **模块路径解析错误**: 在vue.config.js中添加simple-mind-map别名配置
 4. **copy.js文件缺失**: 在Dockerfile中显式复制copy.js文件到构建环境
 5. **Vue构建输出路径错误**: 根据vue.config.js配置修正文件复制路径从/app/web/dist到/app/dist
-6. **镜像体积优化**: 后端仅安装生产依赖，最终镜像不包含不必要的开发工具
+6. **页面空白问题**: 修正vue.config.js中publicPath配置，从'./dist'改为'./'，解决资源文件加载问题
+7. **镜像体积优化**: 后端仅安装生产依赖，最终镜像不包含不必要的开发工具
 
 ### Vue.config.js 配置修复
 
