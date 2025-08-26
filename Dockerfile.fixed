@@ -1,4 +1,4 @@
-# 多阶段构建优化的Dockerfile
+# 多阶段构建优化的Dockerfile - 修复版本
 
 # 阶段1: 构建前端应用
 FROM node:16-alpine AS frontend-builder
@@ -27,19 +27,17 @@ COPY copy.js ./copy.js
 # 构建前端应用
 RUN cd web && npm run build
 
-# 执行copy.js处理文件结构
-RUN echo "=== 执行copy.js处理文件 ===" && \
-    node copy.js
-
 # 验证构建结果
 RUN echo "=== 验证构建结果 ===" && \
     ls -la /app/ && \
-    echo "检查根目录index.html:" && \
-    test -f /app/index.html && echo "✅ 根目录index.html存在" || echo "ℹ️ 根目录index.html不存在" && \
     echo "检查dist目录:" && \
-    ls -la /app/dist/ 2>/dev/null || echo "dist目录不存在" && \
-    echo "确保有可用的静态文件:" && \
-    (test -f /app/index.html || test -f /app/dist/index.html) && echo "✅ 找到index.html" || (echo "❌ 未找到index.html" && exit 1)
+    ls -la /app/dist/ && \
+    echo "检查index.html:" && \
+    test -f /app/dist/index.html && echo "✅ index.html存在" || (echo "❌ index.html不存在" && exit 1) && \
+    test -s /app/dist/index.html && echo "✅ index.html非空" || (echo "❌ index.html为空" && exit 1) && \
+    echo "检查静态资源:" && \
+    find /app/dist -name "*.js" | head -5 && \
+    find /app/dist -name "*.css" | head -5
 
 # 阶段2: 构建后端应用
 FROM node:16-alpine AS backend-builder
@@ -65,28 +63,9 @@ RUN apk add --no-cache nodejs npm
 # 创建应用目录
 RUN mkdir -p /app/backend
 
-# 从构建阶段复制文件
-# 智能复制静态文件 - 先尝试根目录，再尝试dist目录
-COPY --from=frontend-builder /app/ /tmp/app-files/
-
-# 智能复制静态文件到nginx目录
-RUN echo "=== 智能复制静态文件 ===" && \
-    echo "检查可用文件:" && \
-    ls -la /tmp/app-files/ && \
-    if [ -f "/tmp/app-files/index.html" ]; then \
-        echo "✅ 使用根目录的index.html" && \
-        cp -r /tmp/app-files/* /usr/share/nginx/html/ && \
-        echo "复制根目录所有文件到nginx"; \
-    elif [ -f "/tmp/app-files/dist/index.html" ]; then \
-        echo "✅ 使用dist目录的index.html" && \
-        cp -r /tmp/app-files/dist/* /usr/share/nginx/html/ && \
-        echo "复制dist目录文件到nginx"; \
-    else \
-        echo "❌ 未找到index.html文件" && \
-        find /tmp/app-files -name "index.html" -type f && \
-        exit 1; \
-    fi && \
-    rm -rf /tmp/app-files
+# 从构建阶段复制文件 - 增加验证
+# 注意: vue.config.js中outputDir为'../dist'，所以构建输出在/app/dist
+COPY --from=frontend-builder /app/dist /usr/share/nginx/html
 
 # 验证复制结果
 RUN echo "=== 验证文件复制结果 ===" && \
@@ -94,7 +73,9 @@ RUN echo "=== 验证文件复制结果 ===" && \
     echo "检查index.html:" && \
     test -f /usr/share/nginx/html/index.html && echo "✅ index.html已复制" || (echo "❌ index.html复制失败" && exit 1) && \
     echo "文件大小:" && \
-    stat /usr/share/nginx/html/index.html
+    stat /usr/share/nginx/html/index.html && \
+    echo "内容检查:" && \
+    head -5 /usr/share/nginx/html/index.html
 
 COPY --from=backend-builder /app /app/backend
 
@@ -103,7 +84,12 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # 创建启动脚本
 RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'echo "=== 启动服务 ==="' >> /start.sh && \
+    echo 'echo "检查文件状态:"' >> /start.sh && \
+    echo 'ls -la /usr/share/nginx/html/' >> /start.sh && \
+    echo 'echo "启动后端服务..."' >> /start.sh && \
     echo 'cd /app/backend && node index.js &' >> /start.sh && \
+    echo 'echo "启动nginx..."' >> /start.sh && \
     echo 'nginx -g "daemon off;"' >> /start.sh && \
     chmod +x /start.sh
 
@@ -112,7 +98,7 @@ EXPOSE 80 3000
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
 
 # 启动服务
 CMD ["/start.sh"]
